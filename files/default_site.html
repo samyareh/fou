@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>AquaFlow - Daily Water Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none; /* smooth interactions, no accidental text selection on buttons */
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(145deg, #e0f2fe 0%, #bae6fd 100%);
+            font-family: 'Segoe UI', 'Poppins', system-ui, -apple-system, 'Inter', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+        }
+
+        /* main card */
+        .glass-card {
+            max-width: 580px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            border-radius: 3rem;
+            box-shadow: 0 25px 45px -12px rgba(0, 30, 60, 0.35), 0 4px 12px rgba(0, 0, 0, 0.05);
+            padding: 1.8rem 2rem 2.5rem;
+            transition: all 0.2s ease;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
+        /* header */
+        .header {
+            text-align: center;
+            margin-bottom: 1.8rem;
+        }
+        .header h1 {
+            font-size: 2.2rem;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #0c4e6e, #0891b2);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .header h1::before {
+            content: "💧";
+            font-size: 2rem;
+            background: none;
+            color: #0284c7;
+        }
+        .sub {
+            color: #2c5f7a;
+            margin-top: 6px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        /* water visual ring */
+        .water-visual {
+            background: #f0f9ff;
+            border-radius: 3rem;
+            padding: 1rem 1rem 0.8rem;
+            margin-bottom: 1.8rem;
+            box-shadow: inset 0 1px 4px rgba(0,0,0,0.02), 0 8px 20px rgba(0, 20, 40, 0.1);
+        }
+        .cup-art {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #ffffffd9;
+            border-radius: 2rem;
+            padding: 1rem 1rem 1.2rem;
+        }
+        .water-icon {
+            font-size: 3.2rem;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+        }
+        .water-fill-bar {
+            width: 80%;
+            background: #e2e8f0;
+            border-radius: 60px;
+            height: 28px;
+            margin: 0.8rem 0 0.6rem;
+            overflow: hidden;
+            box-shadow: inset 0 1px 3px #0001;
+        }
+        .fill-progress {
+            width: 0%;
+            background: linear-gradient(90deg, #3b82f6, #0ea5e9);
+            height: 100%;
+            border-radius: 60px;
+            transition: width 0.35s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 8px;
+            color: white;
+            font-weight: bold;
+            font-size: 0.75rem;
+        }
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            gap: 1rem;
+            margin-top: 8px;
+        }
+        .stat-card {
+            flex: 1;
+            background: #eef5ff;
+            border-radius: 2rem;
+            padding: 0.6rem 0.2rem;
+            text-align: center;
+        }
+        .stat-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+            color: #226688;
+        }
+        .stat-value {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: #075985;
+            line-height: 1.2;
+        }
+        .unit {
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        /* action buttons */
+        .add-panel {
+            background: #f8fafc;
+            border-radius: 2rem;
+            padding: 1.4rem;
+            margin: 1rem 0 1.2rem;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02), inset 0 1px 0 white;
+        }
+        .quick-add {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+            justify-content: center;
+            margin-bottom: 1.2rem;
+        }
+        .water-btn {
+            background: white;
+            border: none;
+            padding: 0.65rem 1.3rem;
+            border-radius: 3rem;
+            font-weight: 700;
+            font-size: 1.05rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: 0.15s;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+            color: #0369a1;
+            border: 1px solid #cbd5e1;
+        }
+        .water-btn:active {
+            transform: scale(0.96);
+            background: #eef2ff;
+        }
+        .water-btn.large {
+            background: #0c4e6e;
+            color: white;
+            border: none;
+            box-shadow: 0 8px 18px -6px #0891b270;
+        }
+        .custom-add {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            justify-content: center;
+            margin-top: 12px;
+        }
+        .custom-input {
+            background: white;
+            border: 1px solid #b9d8f0;
+            border-radius: 60px;
+            padding: 0.65rem 1rem;
+            width: 120px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 1rem;
+            color: #0f3b4f;
+            outline: none;
+        }
+        .custom-input:focus {
+            border-color: #0e7cae;
+            box-shadow: 0 0 0 2px #7ab7d4;
+        }
+        .btn-custom {
+            background: #2c7a47;
+            color: white;
+            border: none;
+            padding: 0.65rem 1.2rem;
+            border-radius: 40px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.1s linear;
+        }
+        .btn-custom:active {
+            transform: scale(0.96);
+            background: #1f5a36;
+        }
+
+        /* reset & goal */
+        .goal-reset {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        .goal-section {
+            background: #e2f0fa;
+            border-radius: 3rem;
+            padding: 0.5rem 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            flex-wrap: wrap;
+        }
+        .goal-section label {
+            font-weight: 600;
+            color: #155e75;
+        }
+        #goalInput {
+            width: 85px;
+            background: white;
+            border: none;
+            border-radius: 40px;
+            padding: 0.4rem 0.8rem;
+            font-weight: bold;
+            text-align: center;
+        }
+        .small-btn {
+            background: #cbd5e1;
+            border: none;
+            border-radius: 2rem;
+            padding: 0.5rem 1rem;
+            font-weight: 600;
+            color: #1f3e48;
+            cursor: pointer;
+            transition: 0.1s;
+        }
+        .small-btn:active {
+            background: #94a3b8;
+            transform: scale(0.96);
+        }
+        .reset-btn {
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+        }
+
+        /* message */
+        .message-area {
+            text-align: center;
+            margin-top: 1.2rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #226688;
+            background: #eef2ffaa;
+            padding: 0.5rem;
+            border-radius: 3rem;
+            transition: all 0.2s;
+        }
+        .celebration {
+            background: #bbf7d0;
+            color: #166534;
+            font-weight: bold;
+        }
+        footer {
+            font-size: 0.7rem;
+            text-align: center;
+            margin-top: 1.5rem;
+            color: #577a8f;
+        }
+
+        @media (max-width: 480px) {
+            .glass-card {
+                padding: 1.2rem;
+            }
+            .water-btn {
+                padding: 0.5rem 1rem;
+                font-size: 0.9rem;
+            }
+            .stat-value {
+                font-size: 1.3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="glass-card">
+    <div class="header">
+        <h1>Water Balance</h1>
+        <div class="sub">🌊 Add · Track · Hydrate</div>
+    </div>
+
+    <div class="water-visual">
+        <div class="cup-art">
+            <div class="water-icon">🚰 💧</div>
+            <div class="water-fill-bar">
+                <div class="fill-progress" id="fillProgressBar">0%</div>
+            </div>
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-label">Today's Intake</div>
+                    <div class="stat-value"><span id="currentAmount">0</span> <span class="unit">ml</span></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Daily Goal</div>
+                    <div class="stat-value"><span id="goalAmount">2200</span> <span class="unit">ml</span></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Remaining</div>
+                    <div class="stat-value"><span id="remainingAmount">2200</span> <span class="unit">ml</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="add-panel">
+        <div class="quick-add">
+            <button class="water-btn" data-ml="150">💧 +150 ml</button>
+            <button class="water-btn" data-ml="250">🥤 +250 ml</button>
+            <button class="water-btn" data-ml="330">🍶 +330 ml</button>
+            <button class="water-btn" data-ml="500">🧴 +500 ml</button>
+        </div>
+        <div class="custom-add">
+            <input type="number" id="customMlInput" class="custom-input" placeholder="ml" value="200" step="10" min="1">
+            <button id="customAddBtn" class="btn-custom">➕ Add water</button>
+        </div>
+    </div>
+
+    <div class="goal-reset">
+        <div class="goal-section">
+            <label>🎯 Goal (ml):</label>
+            <input type="number" id="goalInput" value="2200" step="100" min="300">
+            <button id="setGoalBtn" class="small-btn">Set</button>
+        </div>
+        <button id="resetDayBtn" class="small-btn reset-btn">⟳ Reset today</button>
+    </div>
+
+    <div id="messageBox" class="message-area">
+        💙 Click any glass to add water — stay refreshed!
+    </div>
+    <footer>✨ Every sip counts — hydrate mindfully ✨</footer>
+</div>
+
+<script>
+    // ---------- WATER TRACKER CORE ----------
+    // Storage keys
+    const STORAGE_CURRENT = "aquaflow_current_intake";
+    const STORAGE_GOAL = "aquaflow_daily_goal";
+    const STORAGE_DATE = "aquaflow_last_date";
+
+    // DOM elements
+    const currentSpan = document.getElementById("currentAmount");
+    const goalSpan = document.getElementById("goalAmount");
+    const remainingSpan = document.getElementById("remainingAmount");
+    const fillProgress = document.getElementById("fillProgressBar");
+    const messageDiv = document.getElementById("messageBox");
+    const goalInput = document.getElementById("goalInput");
+    const setGoalBtn = document.getElementById("setGoalBtn");
+    const resetDayBtn = document.getElementById("resetDayBtn");
+    const customAddBtn = document.getElementById("customAddBtn");
+    const customMlInput = document.getElementById("customMlInput");
+
+    // All quick-add buttons with data-ml
+    const quickBtns = document.querySelectorAll(".water-btn[data-ml]");
+
+    // state
+    let currentIntake = 0;      // ml consumed today
+    let dailyGoal = 2200;        // default goal 2.2L
+
+    // helper: get today's date as YYYY-MM-DD
+    function getTodayKey() {
+        const today = new Date();
+        return `${today.getFullYear()}-${today.getMonth()+1}-${today.getDate()}`;
+    }
+
+    // load from localStorage & reset if new day
+    function loadData() {
+        const savedGoal = localStorage.getItem(STORAGE_GOAL);
+        if (savedGoal && !isNaN(parseInt(savedGoal))) {
+            dailyGoal = parseInt(savedGoal);
+        } else {
+            dailyGoal = 2200;
+        }
+        goalInput.value = dailyGoal;
+        updateGoalUI();
+
+        const lastDate = localStorage.getItem(STORAGE_DATE);
+        const today = getTodayKey();
+        let savedIntake = 0;
+        if (lastDate === today) {
+            const storedIntake = localStorage.getItem(STORAGE_CURRENT);
+            if (storedIntake && !isNaN(parseInt(storedIntake))) {
+                savedIntake = parseInt(storedIntake);
+            } else {
+                savedIntake = 0;
+            }
+        } else {
+            // new day: reset intake but keep goal
+            savedIntake = 0;
+            localStorage.setItem(STORAGE_DATE, today);
+            localStorage.setItem(STORAGE_CURRENT, "0");
+        }
+        currentIntake = savedIntake;
+        updateAllDisplay();
+    }
+
+    // update all UI: numbers, progress bar, remaining, message style
+    function updateAllDisplay() {
+        // update numbers
+        currentSpan.innerText = currentIntake;
+        goalSpan.innerText = dailyGoal;
+        let remaining = dailyGoal - currentIntake;
+        if (remaining < 0) remaining = 0;
+        remainingSpan.innerText = remaining;
+
+        // calculate percentage (cap at 100%)
+        let percent = (currentIntake / dailyGoal) * 100;
+        if (percent > 100) percent = 100;
+        if (percent < 0) percent = 0;
+        fillProgress.style.width = `${percent}%`;
+        fillProgress.innerText = `${Math.floor(percent)}%`;
+        
+        // change progress color excitement / goal reached
+        if (percent >= 100) {
+            fillProgress.style.background = "linear-gradient(90deg, #10b981, #34d399)";
+            showMessage("🎉 Amazing! You've reached your hydration goal! 🎉", true);
+        } else if (percent >= 75) {
+            fillProgress.style.background = "linear-gradient(90deg, #3b82f6, #38bdf8)";
+        } else {
+            fillProgress.style.background = "linear-gradient(90deg, #3b82f6, #0ea5e9)";
+        }
+
+        // update remaining message if needed (non-intrusive, but we handle quick message anyway)
+        if (currentIntake >= dailyGoal && percent >= 100) {
+            // celebration effect
+            messageDiv.classList.add("celebration");
+        } else {
+            messageDiv.classList.remove("celebration");
+        }
+        // save to storage
+        saveToLocal();
+    }
+
+    function saveToLocal() {
+        localStorage.setItem(STORAGE_CURRENT, currentIntake.toString());
+        localStorage.setItem(STORAGE_GOAL, dailyGoal.toString());
+        localStorage.setItem(STORAGE_DATE, getTodayKey());
+    }
+
+    function updateGoalUI() {
+        goalSpan.innerText = dailyGoal;
+        updateAllDisplay();
+    }
+
+    // add water (ml)
+    function addWater(mlAmount) {
+        if (!mlAmount || mlAmount <= 0) {
+            showMessage("⚠️ Please enter a positive amount (ml)", false);
+            return false;
+        }
+        // add to intake
+        let newIntake = currentIntake + mlAmount;
+        currentIntake = newIntake;
+        
+        // determine if goal reached or exceeded
+        let wasUnderGoal = (currentIntake - mlAmount) < dailyGoal;
+        let nowReachedOrExceed = currentIntake >= dailyGoal;
+        
+        updateAllDisplay();
+        
+        // Friendly message depending on amount & progress
+        if (nowReachedOrExceed && wasUnderGoal) {
+            showMessage(`🎯 +${mlAmount} ml! CONGRATULATIONS! You crushed your daily goal! 🏆💙`, true);
+        } else if (currentIntake >= dailyGoal + 500) {
+            showMessage(`💪 ${mlAmount} ml added! You're super hydrated! (${currentIntake} ml total)`, false);
+        } else if (currentIntake >= dailyGoal) {
+            showMessage(`✨ +${mlAmount} ml — Goal ACHIEVED! Keep glowing! ✨`, true);
+        } else {
+            let remainingNow = dailyGoal - currentIntake;
+            showMessage(`💧 Added ${mlAmount} ml! Only ${remainingNow} ml left to reach your goal.`, false);
+        }
+        
+        // extra animation-like: progress bar already updated with smooth transition
+        return true;
+    }
+
+    // reset today's intake (zero but keep goal)
+    function resetToday() {
+        if (currentIntake === 0) {
+            showMessage("Already zero intake for today. Add some water! 💦", false);
+            return;
+        }
+        currentIntake = 0;
+        updateAllDisplay();
+        showMessage("🔄 Today's intake has been reset. Fresh start! 🌊", false);
+        // force removal of celebration maybe
+        messageDiv.classList.remove("celebration");
+    }
+
+    // set new daily goal
+    function setNewGoal() {
+        let newGoal = parseInt(goalInput.value);
+        if (isNaN(newGoal) || newGoal < 50) {
+            showMessage("❌ Goal must be at least 50 ml", false);
+            goalInput.value = dailyGoal;
+            return;
+        }
+        if (newGoal > 10000) {
+            showMessage("💪 That's an epic goal! but keep safe hydration (max 10L).", false);
+            if (newGoal > 10000) newGoal = 10000;
+        }
+        dailyGoal = newGoal;
+        goalInput.value = dailyGoal;
+        updateAllDisplay();
+        // re-evaluate message based on new goal vs intake
+        if (currentIntake >= dailyGoal) {
+            showMessage(`🎯 Goal updated to ${dailyGoal} ml — You already reached it! Excellent!`, true);
+        } else {
+            let remain = dailyGoal - currentIntake;
+            showMessage(`📌 New daily goal: ${dailyGoal} ml. ${remain} ml remaining. Let's go!`, false);
+        }
+    }
+
+    // show message with auto-clear timeout and optional celebration styling
+    let msgTimeout;
+    function showMessage(msg, isCelebratory = false) {
+        if (msgTimeout) clearTimeout(msgTimeout);
+        messageDiv.innerText = msg;
+        messageDiv.classList.remove("celebration");
+        if (isCelebratory) {
+            messageDiv.classList.add("celebration");
+        }
+        msgTimeout = setTimeout(() => {
+            if (messageDiv) {
+                if (currentIntake >= dailyGoal && dailyGoal > 0) {
+                    messageDiv.innerText = "🥳 Goal achieved! Keep hydrating or enjoy your day! 🥳";
+                    messageDiv.classList.add("celebration");
+                } else {
+                    messageDiv.innerText = "💙 Keep the rhythm — add water anytime! 💙";
+                    messageDiv.classList.remove("celebration");
+                }
+            }
+        }, 2800);
+    }
+
+    // Event binding
+    function bindEvents() {
+        // quick add buttons
+        quickBtns.forEach(btn => {
+            btn.addEventListener("click", (e) => {
+                const mlVal = parseInt(btn.getAttribute("data-ml"));
+                if (!isNaN(mlVal)) {
+                    addWater(mlVal);
+                }
+            });
+        });
+        
+        // custom add
+        customAddBtn.addEventListener("click", () => {
+            let customValue = parseInt(customMlInput.value);
+            if (isNaN(customValue) || customValue <= 0) {
+                showMessage("🔁 Please enter a valid number (1 ml or more)", false);
+                customMlInput.value = 200;
+                return;
+            }
+            // optional: limit practical max per addition (800ml to avoid accidental huge)
+            if (customValue > 1500) {
+                if(confirm("Add more than 1.5L at once? That's a lot! Click OK to continue.")) {
+                    addWater(customValue);
+                } else {
+                    showMessage("Safe choice! Try smaller increments.", false);
+                }
+            } else {
+                addWater(customValue);
+            }
+            customMlInput.value = customValue; // keep same for convenience
+        });
+        
+        // set goal button
+        setGoalBtn.addEventListener("click", setNewGoal);
+        
+        // reset day button
+        resetDayBtn.addEventListener("click", resetToday);
+        
+        // optional: when goal input changes on enter
+        goalInput.addEventListener("keypress", (e) => {
+            if (e.key === "Enter") {
+                setNewGoal();
+            }
+        });
+        customMlInput.addEventListener("keypress", (e) => {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                customAddBtn.click();
+            }
+        });
+    }
+    
+    // additional: check if goal has been met after hydration and add some glitter effect on progress bar!
+    // animate on load friendly
+    function initialAnimation() {
+        // just a subtle message if intake already meets goal
+        if (currentIntake >= dailyGoal && dailyGoal > 0 && currentIntake > 0) {
+            showMessage("🌟 You already achieved your goal today! Amazing consistency 🌟", true);
+        } else if (currentIntake > 0) {
+            let remaining = dailyGoal - currentIntake;
+            showMessage(`💙 Welcome back! You've had ${currentIntake} ml today. Only ${remaining} ml to goal!`, false);
+        } else {
+            showMessage("💧 Start your hydration journey — tap any amount! 💧", false);
+        }
+    }
+
+    // Initialize and load storage, check date
+    function init() {
+        loadData();      // loads from storage and handles day reset
+        bindEvents();
+        initialAnimation();
+    }
+    
+    init();
+</script>
+</body>
+</html>
