@@ -1,0 +1,122 @@
+---
+- hosts: all
+  become: true
+  tasks: 
+
+    - name: install updates (CentOS,AlmaLinux)
+      tags: always
+      dnf:
+        update_cache: yes
+        update_only: yes
+      when: ansible_distribution in ["CentOS","AlmaLinux"]
+
+
+
+
+    - name: install updates (Ubuntu & Debian)
+      tags: always
+      apt:
+        update_cache: yes
+        upgrade: dist
+      when: ansible_distribution in ["Ubuntu", "Debian"]
+
+
+
+- hosts: all
+  become: true
+  tasks:
+
+  - name: create a new user
+    tags: always
+    user:
+      nane: mac
+      groups: root
+
+
+- hosts: workstation
+  become: true
+  tasks:
+
+
+    - name: unzip installation
+      package:
+        name: unzip
+
+
+    - name: terraform installation
+      unarchive:
+        src: https://releases.hashicorp.com/terraform/1.15.5/terraform_1.15.5_linux_amd64.zip
+        dest: /usr/local/bin
+        remote_src: yes
+        owner: root
+        group: root
+        mode: 0755
+
+
+
+- hosts: web-servers
+  become: true
+  tasks:
+
+    - name: install apache and php for AlmaLinux,CentOS
+      tags: apache,httpd,AlmaLinux,CentOS
+      yum:
+        name:
+          - httpd
+          - php
+        state: latest
+      when: ansible_distribution in ["CentOS", "AlmaLinux"]
+
+
+    - name: to start httpd for AlmaLinux,CentOS
+      tags: apache,httpd,AlmaLinux,CentOS
+      service:
+        name: httpd
+        state: started
+        enabled: yes
+      when: ansible_distribution in ["CentOS", "AlmaLinux"]
+
+
+    - name: install apache and php for Ubuntu 
+      tags: apache,apache2,Ubuntu
+      apt:
+        name:
+          - apache2
+          - libapache2-mod-php
+        state: present
+      when: ansible_distribution in ["Ubuntu","Debian"]
+
+
+    - name: copy default html file for site
+      tags: apache,apache2,httpd
+      copy:
+        src: default_site.html
+        dest: /var/www/html/index.html
+        owner: root
+        group: root
+        mode: 0664
+
+
+
+- hosts: db-server
+  become: true
+  tasks:
+
+
+    - name: install mariadb
+      apt:
+        name: mariadb-server
+        state: latest
+      when: ansible_distribution == "Debian"
+
+
+
+- hosts: file-server
+  become: true
+  tasks:
+
+
+    - name: install samba
+      package:
+        name: samba
+        state: present
