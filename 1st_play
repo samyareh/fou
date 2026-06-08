@@ -3,21 +3,21 @@
   become: true
   tasks: 
 
-    - name: install updates (CentOS,AlmaLinux)
+    - name: update repo cache (CentOS)
       tags: always
       dnf:
         update_cache: yes
-        update_only: yes
+      changed_when: false
       when: ansible_distribution in ["CentOS","AlmaLinux"]
 
 
 
 
-    - name: install updates (Ubuntu & Debian)
+    - name: update repo cache (Debian based)
       tags: always
       apt:
         update_cache: yes
-        upgrade: dist
+      changed_when: false
       when: ansible_distribution in ["Ubuntu", "Debian"]
 
 
@@ -27,12 +27,6 @@
   tasks:
 
 
-   - name: create user shak
-     tags: always
-     user:
-       name: shak
-       groups: root
-
 
    - name: add ssh key for shak
      tags: always
@@ -41,14 +35,6 @@
        key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIM8CTHHmXwSoUbej0K8qJWHqvi5IxDU5Dvj4v+QTpsNs ansible"
 
    
-   - name: add sudoer file for shak
-     tags: always
-     ansible.builtin.copy:
-       src: files/my_sudoers
-       dest: /etc/sudoers.d/shak
-       owner: root
-       group: root
-       mode: 0440
 
 
 - hosts: workstation
