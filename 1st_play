@@ -3,7 +3,7 @@
   become: true
   tasks: 
 
-    - name: install updates (CentOS)
+    - name: install updates (CentOS,AlmaLinux)
       tags: always
       dnf:
         update_cache: yes
@@ -20,6 +20,37 @@
         upgrade: dist
       when: ansible_distribution in ["Ubuntu", "Debian"]
 
+
+
+- hosts: all
+  become: true
+  tasks:
+
+
+   - name: create user shak
+     tags: always
+     user:
+       name: shak
+       groups: root
+
+
+   - name: add ssh key for shak
+     tags: always
+     authorized_key:
+       user: shak
+       key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIM8CTHHmXwSoUbej0K8qJWHqvi5IxDU5Dvj4v+QTpsNs ansible"
+
+   
+   - name: add sudoer file for shak
+     tags: always
+     ansible.builtin.copy:
+       src: files/my_sudoers
+       dest: /etc/sudoers.d/shak
+       owner: root
+       group: root
+       mode: 0440
+
+
 - hosts: workstation
   become: true
   tasks:
@@ -32,7 +63,7 @@
 
     - name: terraform installation
       unarchive:
-        src: https://releases.hashicorp.com/terraform/1.8.3/terraform_1.8.3_linux_amd64.zip
+        src: https://releases.hashicorp.com/terraform/1.15.5/terraform_1.15.5_linux_amd64.zip
         dest: /usr/local/bin
         remote_src: yes
         owner: root
@@ -45,13 +76,22 @@
   become: true
   tasks:
 
-    - name: install apache and php for CentOS
-      tags: apache,httpd,CentOS
+    - name: install apache and php for AlmaLinux,CentOS
+      tags: apache,httpd,AlmaLinux,CentOS
       yum:
         name:
           - httpd
           - php
         state: latest
+      when: ansible_distribution in ["CentOS", "AlmaLinux"]
+
+
+    - name: to start httpd for AlmaLinux,CentOS
+      tags: apache,httpd,AlmaLinux,CentOS
+      service:
+        name: httpd
+        state: started
+        enabled: yes
       when: ansible_distribution in ["CentOS", "AlmaLinux"]
 
 
